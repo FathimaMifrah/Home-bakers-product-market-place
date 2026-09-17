@@ -510,24 +510,31 @@ app.patch('/api/users/:id', async (req, res) => {
 
 app.get('/api/products', async (req, res) => {
   const { bakerId, category } = req.query
-  let sql = 'SELECT * FROM products'
+  let sql = `
+    SELECT p.* FROM products p
+    JOIN users u ON p.baker_id = u.id
+    WHERE u.role = 'baker' AND u.is_active = TRUE`
   const params = []
-  const filters = []
+
   if (bakerId) {
-    filters.push('baker_id = ?')
+    sql += ' AND p.baker_id = ?'
     params.push(bakerId)
   }
   if (category) {
-    filters.push('category = ?')
+    sql += ' AND category = ?'
     params.push(category)
   }
-  if (filters.length) sql += ' WHERE ' + filters.join(' AND ')
   const rows = await query(sql, params)
   res.json(rows.map(mapProduct))
 })
 
 app.get('/api/products/:id', async (req, res) => {
-  const rows = await query('SELECT * FROM products WHERE id = ?', [req.params.id])
+  const rows = await query(
+    `SELECT p.* FROM products p
+     JOIN users u ON p.baker_id = u.id
+     WHERE p.id = ? AND u.role = 'baker' AND u.is_active = TRUE`,
+    [req.params.id]
+  )
   if (!rows.length) return res.status(404).json({ error: 'Product not found' })
   res.json(mapProduct(rows[0]))
 })
@@ -1025,6 +1032,12 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 })
 
 // Generate PayHere MD5 checkout signature
+const getPayHereConfig = () => ({
+  merchantId: process.env.PAYHERE_MERCHANT_ID || '1236698',
+  merchantSecret: process.env.PAYHERE_SECRET || 'MzU3MzM3NTUwNzcwNDc2MTIzNTMzMTMwNzY2OTYzODM2MzA2MDk2',
+  currency: 'LKR',
+})
+
 app.post('/api/payment/hash', (req, res) => {
   try {
     const { orderId, amount } = req.body
@@ -1032,9 +1045,7 @@ app.post('/api/payment/hash', (req, res) => {
       return res.status(400).json({ error: 'Order ID and amount are required.' })
     }
 
-    const merchantId = process.env.PAYHERE_MERCHANT_ID || '1236698'
-    const merchantSecret = process.env.PAYHERE_SECRET || 'MzU3MzM3NTUwNzcwNDc2MTIzNTMzMTMwNzY2OTYzODM2MzA2MDk2'
-    const currency = 'LKR'
+    const { merchantId, merchantSecret, currency } = getPayHereConfig()
 
     console.log('[PayHere] Using Merchant ID:', merchantId)
     console.log('[PayHere] Merchant Secret loaded:', merchantSecret ? 'YES (length: ' + merchantSecret.length + ')' : 'NO')
@@ -1101,7 +1112,7 @@ app.post('/api/payment/notify', async (req, res) => {
       md5sig
     } = req.body
 
-    const merchantSecret = process.env.PAYHERE_SECRET || '4ZGhP2SHfSE48d3l70vBh44Uob3fb0Qy18LN6JGWNGC2'
+    const { merchantSecret } = getPayHereConfig()
 
     // Verify MD5 signature
     const localSig = crypto

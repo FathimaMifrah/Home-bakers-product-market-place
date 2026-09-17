@@ -79,7 +79,7 @@ export default function AdminInventoryPage() {
       await refreshProducts()
       setEditOpen(false)
     } catch (err) {
-      toast.error('Failed to update product')
+      toast.error(err instanceof Error ? err.message : 'Failed to update product')
     } finally {
       setSaving(false)
     }
@@ -91,7 +91,7 @@ export default function AdminInventoryPage() {
       await refreshProducts()
       toast.success('Stock updated')
     } catch (err) {
-      toast.error('Failed to update stock')
+      toast.error(err instanceof Error ? err.message : 'Failed to update stock')
     }
   }
 
@@ -101,7 +101,7 @@ export default function AdminInventoryPage() {
       await refreshProducts()
       toast.success(p.isAvailable ? 'Marked as out of stock' : 'Marked as available')
     } catch (err) {
-      toast.error('Failed to update availability')
+      toast.error(err instanceof Error ? err.message : 'Failed to update availability')
     }
   }
 

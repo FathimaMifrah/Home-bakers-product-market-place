@@ -228,7 +228,10 @@ export default function DeliveryProfilePage() {
                   <select
                     id="vehicleType"
                     value={form.vehicleType}
-                    onChange={(e) => setForm({ ...form, vehicleType: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({
+                      ...form,
+                      vehicleType: e.target.value as 'bike' | 'scooter' | 'car',
+                    })}
                     disabled={!isEditing}
                     className="w-full rounded-xl h-11 px-4 border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-muted/30 disabled:text-muted-foreground"
                   >
