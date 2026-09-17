@@ -16,3 +16,21 @@ node_modules
 dist
 .DS_Store
 server/import_db_cloud.js
+
+# IDEs and Caches
+.vs/
+*.tsbuildinfo
+
+# Uploads and Assets
+server/uploads/
+baker images/
+
+# Databases
+db/
+*.sql
+
+# Scratch Scripts
+.rename_variables.py
+create_hnd_ppt.cjs
+create_ppt.cjs
+create_ppt.py
